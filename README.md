@@ -1,4 +1,4 @@
-# Star Wars Characters
+# Star Wars Characters - [DEMO](https://my-star-wars-zff3.vercel.app/)
 This project is a web application that displays a list of Star Wars characters. It includes features like pagination, search, detailed character information, and local editing capabilities.
 
 ## Requirements
