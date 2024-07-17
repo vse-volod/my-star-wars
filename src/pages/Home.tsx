@@ -28,7 +28,7 @@ const Home: React.FC = () => {
   }, [page, searchQuery]);
 
   const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
+    _: React.ChangeEvent<unknown>,
     value: number
   ) => {
     setPage(value);
