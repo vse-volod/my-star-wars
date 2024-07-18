@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { getCharacters, searchCharacters } from "../api/swapi";
 import { CharacterData } from "../types/character";
 import CharacterList from "../components/CharacterList";
@@ -6,26 +6,20 @@ import Breadcrumbs from "../components/Breadcrumbs";
 import { Pagination, CircularProgress, Box, Typography } from "@mui/material";
 import SearchBar from "../components/SearchBar";
 import Layout from "../components/Layout";
+import ErrorSnackbar from "../components/ErrorSnackbar";
+import useFetchData from "../hooks/useFetchData";
 
-const ITEMS_PER_PAGE = 9;
+const ITEMS_PER_PAGE = 10;
 
 const Home: React.FC = () => {
-  const [charactersData, setCharactersData] = useState<CharacterData>({
-    count: 0,
-    characters: [],
-  });
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    async function fetchCharacters() {
-      const data = searchQuery
-        ? await searchCharacters(searchQuery)
-        : await getCharacters(page);
-      setCharactersData(data);
-    }
-    fetchCharacters();
+  
+  const fetchCharacters = useCallback(() => {
+    return searchQuery ? searchCharacters(searchQuery) : getCharacters(page);
   }, [page, searchQuery]);
+
+  const { data: charactersData, loading, error, setError } = useFetchData<CharacterData>(fetchCharacters);
 
   const handlePageChange = (
     _: React.ChangeEvent<unknown>,
@@ -39,27 +33,36 @@ const Home: React.FC = () => {
     setPage(1);
   };
 
+  const handleCloseSnackbar = () => {
+    setError(null);
+  };
+
   return (
     <Layout>
       <Box width="100%" textAlign="center">
         <Breadcrumbs currentPage="Home" />
         <Typography variant="h1">Star Wars Characters</Typography>
         <SearchBar onSearch={handleSearch} />
-        {charactersData.count === 0 ? (
+        {loading ? (
           <CircularProgress />
+        ) : charactersData && charactersData.characters.length === 0 ? (
+          <Typography variant="h6" color="textSecondary">
+            No characters found.
+          </Typography>
         ) : (
           <>
             <Box width="100%">
-              <CharacterList characters={charactersData.characters} />
+              <CharacterList characters={charactersData?.characters || []} />
             </Box>
             <Pagination
-              count={Math.ceil(charactersData.count / ITEMS_PER_PAGE)}
+              count={Math.ceil((charactersData?.count || 0) / ITEMS_PER_PAGE)}
               page={page}
               onChange={handlePageChange}
               style={{ marginTop: "20px" }}
             />
           </>
         )}
+        <ErrorSnackbar error={error} onClose={handleCloseSnackbar} />
       </Box>
     </Layout>
   );
